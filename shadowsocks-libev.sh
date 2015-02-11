@@ -30,9 +30,9 @@ fi
 function getversion(){
     if [[ -s /etc/redhat-release ]];then
         grep -oE  "[0-9.]+" /etc/redhat-release
-    else    
+    else
         grep -oE  "[0-9.]+" /etc/issue
-    fi    
+    fi
 }
 
 # CentOS version
@@ -44,7 +44,7 @@ function centosversion(){
         return 0
     else
         return 1
-    fi        
+    fi
 }
 
 # Disable selinux
@@ -68,6 +68,12 @@ function pre_install(){
     if [ "$shadowsockspwd" = "" ]; then
         shadowsockspwd="teddysun.com"
     fi
+
+    read -p "(Default port:8989):" shadowsocksport
+    if [ "$shadowsocksport" == "" ]; then
+        shadowsocksport="8989"
+    fi
+
     echo "password:$shadowsockspwd"
     echo "####################################"
     get_char(){
@@ -131,7 +137,7 @@ function config_shadowsocks(){
     cat > /etc/shadowsocks-libev/config.json<<-EOF
 {
     "server":"0.0.0.0",
-    "server_port":8989,
+    "server_port":${shadowsocksport},
     "local_address":"127.0.0.1",
     "local_port":1080,
     "password":"${shadowsockspwd}",
@@ -146,20 +152,20 @@ function iptables_set(){
     echo "iptables start setting..."
     /sbin/service iptables status 1>/dev/null 2>&1
     if [ $? -eq 0 ]; then
-        /etc/init.d/iptables status | grep '8989' | grep 'ACCEPT' >/dev/null 2>&1
+        /etc/init.d/iptables status | grep '${shadowsocksport}' | grep 'ACCEPT' >/dev/null 2>&1
         if [ $? -ne 0 ]; then
-            /sbin/iptables -A INPUT -m state --state NEW -m tcp -p tcp --dport 8989 -j ACCEPT
+            /sbin/iptables -A INPUT -m state --state NEW -m tcp -p tcp --dport ${shadowsocksport} -j ACCEPT
             /etc/init.d/iptables save
             /etc/init.d/iptables restart
         else
-            echo "port 8989 has been set up."
+            echo "port ${shadowsocksport} has been set up."
         fi
     else
         echo "iptables looks like shutdown, please manually set it if necessary."
     fi
 }
 
-# Install 
+# Install
 function install(){
     # Build and Install shadowsocks-libev
     if [ -s /usr/local/bin/ss-server ];then
@@ -196,7 +202,7 @@ function install(){
     echo ""
     echo "Congratulations, shadowsocks-libev install completed!"
     echo -e "Your Server IP: \033[41;37m ${IP} \033[0m"
-    echo -e "Your Server Port: \033[41;37m 8989 \033[0m"
+    echo -e "Your Server Port: \033[41;37m ${shadowsocksport} \033[0m"
     echo -e "Your Password: \033[41;37m ${shadowsockspwd} \033[0m"
     echo -e "Your Local IP: \033[41;37m 127.0.0.1 \033[0m"
     echo -e "Your Local Port: \033[41;37m 1080 \033[0m"
