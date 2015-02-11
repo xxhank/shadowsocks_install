@@ -69,12 +69,14 @@ function pre_install(){
         shadowsockspwd="teddysun.com"
     fi
 
+    echo "Please input port for shadowsocks-libev:"
     read -p "(Default port:8989):" shadowsocksport
     if [ "$shadowsocksport" == "" ]; then
         shadowsocksport="8989"
     fi
 
     echo "password:$shadowsockspwd"
+    echo "port:$shadowsocksport"
     echo "####################################"
     get_char(){
         SAVEDSTTY=`stty -g`
